@@ -20,7 +20,7 @@ interface SidebarProps {
 
 const menuItems = [
   { href: '/doviz-altin', label: 'Döviz & Altın', icon: TrendingUp },
-  { href: '/ai-mutfak', label: 'AI Mutfak', icon: ChefHat },
+ 
   { href: '/metin-doktoru', label: 'Metin Doktoru', icon: FileText },
 ];
 
