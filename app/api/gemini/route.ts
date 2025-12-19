@@ -9,13 +9,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'API anahtarı eksik!' }, { status: 500 });
     }
 
-    const masterPrompt = `
-      Sen usta bir aşçısın. Malzemeler: ${prompt}. 
-      Bu malzemelerle en mantıklı tarifi yaz. 
-      Un-şeker varsa TATLI, et-sebze varsa YEMEK yap.
-    `;
+    // AI'yı terbiye eden ana talimat
+    const masterPrompt = `Sen profesyonel bir aşçısın. 
+    Kullanıcının verdiği malzemeleri analiz et. 
+    Eğer un, şeker, kakao gibi malzemeler varsa MUTLAKA tatlı/kek tarifi ver. 
+    Sakın malzemeyle alakasız sebze yemeği önerme.
+    Malzemeler: ${prompt}`;
 
-    // HATA ALAN YERİ BURAYLA DEĞİŞTİR: v1 sürümü ve gemini-pro modeli en stabil olanıdır.
+    // ÇÖZÜM: v1 sürümü ve gemini-pro modeli her zaman çalışır.
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
       {
@@ -29,15 +30,22 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      return NextResponse.json({ success: false, error: 'Google Hatası: ' + errorData.error.message }, { status: 500 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Google API Hatası: ' + (errorData.error?.message || 'Bilinmeyen hata') 
+      }, { status: 500 });
     }
 
     const data = await response.json();
     const aiResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    return NextResponse.json({ success: true, data: aiResult });
+    if (aiResult) {
+      return NextResponse.json({ success: true, data: aiResult });
+    }
+
+    return NextResponse.json({ success: false, error: 'Tarif üretilemedi.' }, { status: 500 });
 
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Bağlantı hatası!' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Bağlantı hatası oluştu.' }, { status: 500 });
   }
 }
